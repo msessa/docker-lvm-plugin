@@ -5,6 +5,7 @@ import (
 	"log/syslog"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"github.com/docker/go-plugins-helpers/volume"
@@ -306,9 +307,14 @@ func (l *lvmDriver) Mount(req volume.MountRequest) volume.Response {
 		}
 
 		mountArgs := []string{device, getMountpoint(l.home, req.Name)}
-		if isSnap {
-			mountArgs = append([]string{"-o", "nouuid"}, mountArgs...)
+		mountOpts, err := getMountOpts(l.vgConfig)
+		if err != nil {
+			return resp(err)
 		}
+		if isSnap {
+			mountOpts = strings.Join([]string{mountOpts, "nouuid"}, ",")
+		}
+		mountArgs = append([]string{"-o", mountOpts}, mountArgs...)
 		cmd := exec.Command("mount", mountArgs...)
 		if out, err := cmd.CombinedOutput(); err != nil {
 			l.logger.Err(fmt.Sprintf("Mount: mount error: %s output %s", err, string(out)))

@@ -16,6 +16,7 @@ import (
 
 var allowedConfKeys = map[string]bool{
 	"VOLUME_GROUP": true,
+	"MOUNT_OPTS":   true,
 }
 
 func removeLogicalVolume(name, vgName string) ([]byte, error) {
@@ -28,6 +29,26 @@ func removeLogicalVolume(name, vgName string) ([]byte, error) {
 
 func getVolumegroupName(vgConfig string) (string, error) {
 	vgName := ""
+	vgName, err := getConfigEntry(vgConfig, "VOLUME_GROUP")
+	if err != nil {
+		return "", err
+	}
+	if vgName == "" {
+		return "", fmt.Errorf("Volume group name must be provided for volume creation. Please update the config file %s with volume group name", vgConfig)
+	}
+	return vgName, nil
+}
+
+func getMountOpts(vgConfig string) (string, error) {
+	mntOpts := ""
+	mntOpts, err := getConfigEntry(vgConfig, "MOUNT_OPTS")
+	if err != nil {
+		return "", err
+	}
+	return mntOpts, nil
+}
+
+func getConfigEntry(vgConfig string, entryName string) (string, error) {
 	inFile, err := os.Open(vgConfig)
 	if err != nil {
 		return "", err
@@ -45,18 +66,14 @@ func getVolumegroupName(vgConfig string) (string, error) {
 		if !allowedConfKeys[vgSlice[0]] || len(vgSlice) == 1 {
 			continue
 		}
-		vgName = vgSlice[1]
-		break
+		if strings.TrimSpace(vgSlice[0]) == entryName {
+			return strings.TrimSpace(vgSlice[1]), nil
+		}
 	}
 	if err := scanner.Err(); err != nil {
 		return "", err
 	}
-
-	if vgName == "" {
-		return "", fmt.Errorf("Volume group name must be provided for volume creation. Please update the config file %s with volume group name.", vgConfig)
-	}
-
-	return strings.TrimSpace(vgName), nil
+	return "", fmt.Errorf("Config entry %s not found", entryName)
 }
 
 func getMountpoint(home, name string) string {

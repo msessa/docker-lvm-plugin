@@ -5,3 +5,6 @@
 # e.g. vgcreate volume_group_one /dev/hda where /dev/hda is your partition or
 # whole disk on which physical volumes were created.
 VOLUME_GROUP=
+
+# Set extra mount options
+MOUNT_OPTS=
