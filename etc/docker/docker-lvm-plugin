@@ -6,5 +6,8 @@
 # whole disk on which physical volumes were created.
 VOLUME_GROUP=
 
-# Set extra mount options
+# Optional, set extra mount options for the created logical volumes.
+# NOTE: If your docker is running with --selinux-enabled you might want to use
+#       MOUNT_OPTS=defcontext=system_u:object_r:svirt_sandbox_file_t:s0 
+#       to correctly set the default selinux label for the mountpoint
 MOUNT_OPTS=
